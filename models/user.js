@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const uuidv1 = require("uuid/v1");
 const crypto = require("crypto");
-
+const Post = require("./post");
 const {ObjectId} = mongoose.Schema;
 
 // user layout
@@ -80,5 +80,11 @@ userSchema.methods = {
     }
   }
 };
+
+// pre middleware
+userSchema.pre("remove", function(next) {
+    Post.remove({ postedBy: this._id }).exec();
+    next();
+});
 
 module.exports = mongoose.model("User", userSchema);
