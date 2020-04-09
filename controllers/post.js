@@ -103,7 +103,7 @@ exports.createPost = (req, res, next) => {
     // if there is a photo grab filename.ext
     if(files.photo) {
       // validator
-      if (files.photo.size > 20000000) {
+      if (files.photo.size > 2000000) {
         return res.status(400).json({
           error: "Image should be less then 2mb in size."
         });
