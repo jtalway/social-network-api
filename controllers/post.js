@@ -21,25 +21,7 @@ exports.postById = (req, res, next, id) => {
         });
 };
 
-
-// from get request in routes
 // GET POSTS
-// exports.getPosts = (req, res) => {
-//   // get all posts from DB
-//   // response:
-//   const posts = Post.find()
-//     .populate("postedBy", "_id name role")
-//     .populate("comments", "text created")
-//     .populate("comments.postedBy", "_id name")
-//     .select("_id title body created likes")
-//     // sort by latest created
-//     .sort({ created: -1 })
-//     .then((posts) => {
-//     res.json(posts);
-//     })
-//     .catch(err => console.log(err));
-// };
-
 exports.getPosts = async (req, res) => {
     // get current page from req.query or use default value of 1
     const currentPage = req.query.page || 1;
@@ -67,9 +49,6 @@ exports.getPosts = async (req, res) => {
         .catch(err => console.log(err));
 };
 
-
-
-// from post request in routes
 // CREATE POST
 exports.createPost = (req, res, next) => {
     let form = new formidable.IncomingForm();
@@ -77,7 +56,7 @@ exports.createPost = (req, res, next) => {
     form.parse(req, (err, fields, files) => {
         if (err) {
             return res.status(400).json({
-                error: 'Image could not be uploaded.'
+                error: "Photo could not be uploaded."
             });
         }
         let post = new Post(fields);
@@ -121,16 +100,7 @@ exports.postsByUser = (req, res) => {
 exports.isPoster = (req, res, next) => {
   let sameUser = req.post && req.auth && req.post.postedBy._id == req.auth._id;
   let adminUser = req.post && req.auth && req.auth.role === "admin";
-
-  // console.log("req.post", req.post, "req.auth", req.auth);
-  // console.log("SAMEUSER: ", sameUser, "ADMINUSER:", adminUser);
-
   let isPoster = sameUser || adminUser;
-
-  // console.log("req.post: ", req.post);
-  // console.log("req.auth: ", req.auth);
-  // console.log("req.post.postedBy._id: ", req.post.postedBy._id);
-  // console.log("req.auth._id: ", req.auth._id);
 
   if(!isPoster) {
     return res.status(403).json({
@@ -139,7 +109,6 @@ exports.isPoster = (req, res, next) => {
   }
   next();
 };
-
 
 // UPDATE POST
 exports.updatePost = (req, res, next) => {
@@ -199,7 +168,6 @@ exports.singlePost = (req, res) => {
 
 // LIKE
 exports.like = (req, res) => {
-  // find the post and update
   Post.findByIdAndUpdate(
     req.body.postId,
     { $push: { likes: req.body.userId } },
@@ -217,7 +185,6 @@ exports.like = (req, res) => {
 
 // UNLIKE
 exports.unlike = (req, res) => {
-  // find the post and update
   Post.findByIdAndUpdate(
     req.body.postId,
     { $pull: { likes: req.body.userId } },
@@ -278,6 +245,7 @@ exports.uncomment= (req, res) => {
   });
 };
 
+// UPDATE COMMENT
 exports.updateComment = (req, res) => {
     let comment = req.body.comment;
 
