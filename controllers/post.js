@@ -59,7 +59,7 @@ exports.getPosts = async (req, res) => {
                 .populate("postedBy", "_id name role")
                 .sort({ created: -1 })
                 .limit(perPage)
-                .select("_id title body created likes photo");
+                .select("_id title body created likes");
         })
         .then(posts => {
             res.status(200).json(posts);
@@ -72,72 +72,49 @@ exports.getPosts = async (req, res) => {
 // from post request in routes
 // CREATE POST
 exports.createPost = (req, res, next) => {
-  let form = new formidable.IncomingForm();
-  form.keepExtensions = true;
-  form.parse(req, (err, fields, files) => {
-    // check for errors
-    if(err) {
-      return res.status(400).json({
-        error: "Image could not be uploaded."
-      });
-    }
-    // validation
-    const { title, body, categories, tags } = fields;
+    let form = new formidable.IncomingForm();
+    form.keepExtensions = true;
+    form.parse(req, (err, fields, files) => {
+        if (err) {
+            return res.status(400).json({
+                error: 'Image could not be uploaded'
+            });
+        }
+        let post = new Post(fields);
 
-    if (!title || !title.length) {
-        return res.status(400).json({
-            error: "Title is required."
-        });
-    }
+        req.profile.hashed_password = undefined;
+        req.profile.salt = undefined;
+        post.postedBy = req.profile;
 
-    if (!body || body.length < 5) {
-        return res.status(400).json({
-            error: "Content is too short."
+        if (files.photo) {
+            post.photo.data = fs.readFileSync(files.photo.path);
+            post.photo.contentType = files.photo.type;
+        }
+        post.save((err, result) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            }
+            res.json(result);
         });
-    }
-    let post = new Post(fields);
-    req.profile.hashed_password = undefined;
-    req.profile.salt = undefined;
-    // assign to a user
-    post.postedBy = req.profile;
-    // if there is a photo grab filename.ext
-    if(files.photo) {
-      // validator
-      if (files.photo.size > 2000000) {
-        return res.status(400).json({
-          error: "Image should be less then 2mb in size."
-        });
-      }
-
-      // file name
-      post.photo.data = fs.readFileSync(files.photo.path);
-      // file extension
-      post.photo.contentType = files.photo.type;
-    }
-    post.save((err, result) => {
-      if(err) {
-        return res.status(400).json({
-          error: err
-        });
-      }
-      res.json(result);
     });
-  });
 };
 
 // POSTS BY USER
 exports.postsByUser = (req, res) => {
-  Post.find({postedBy: req.profile._id})
-    .populate("postedBy", "_id title body created likes")
-    .sort("_created")
-    .exec((err, posts) => {
-      if(err) {
-        return res.status(400).json({
-          error: err
+    Post.find({ postedBy: req.profile._id })
+        .populate('postedBy', '_id name')
+        .select('_id title body created likes')
+        .sort('_created')
+        .exec((err, posts) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            }
+            res.json(posts);
         });
-      }
-      res.json(posts);
-    });
 };
 
 // IS POSTER
@@ -145,8 +122,8 @@ exports.isPoster = (req, res, next) => {
   let sameUser = req.post && req.auth && req.post.postedBy._id == req.auth._id;
   let adminUser = req.post && req.auth && req.auth.role === "admin";
 
-  console.log("req.post", req.post, "req.auth", req.auth);
-  console.log("SAMEUSER: ", sameUser, "ADMINUSER:", adminUser);
+  // console.log("req.post", req.post, "req.auth", req.auth);
+  // console.log("SAMEUSER: ", sameUser, "ADMINUSER:", adminUser);
 
   let isPoster = sameUser || adminUser;
 
@@ -299,4 +276,33 @@ exports.uncomment= (req, res) => {
         res.json(result);
     }
   });
+};
+
+exports.updateComment = (req, res) => {
+    let comment = req.body.comment;
+
+    Post.findByIdAndUpdate(req.body.postId, { $pull: { comments: { _id: comment._id } } }).exec((err, result) => {
+        if (err) {
+            return res.status(400).json({
+                error: err
+            });
+        } else {
+            Post.findByIdAndUpdate(
+                req.body.postId,
+                { $push: { comments: comment, updated: new Date() } },
+                { new: true }
+            )
+                .populate('comments.postedBy', '_id name')
+                .populate('postedBy', '_id name')
+                .exec((err, result) => {
+                    if (err) {
+                        return res.status(400).json({
+                            error: err
+                        });
+                    } else {
+                        res.json(result);
+                    }
+                });
+        }
+    });
 };

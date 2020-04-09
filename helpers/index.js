@@ -1,6 +1,6 @@
 const nodeMailer = require("nodemailer");
 
-const defaultEmailData = { from: "noreply@node-react.com" };
+const defaultEmailData = { from: "admin@alway.world" };
 
 exports.sendEmail = emailData => {
     const transporter = nodeMailer.createTransport({
