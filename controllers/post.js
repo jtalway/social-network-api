@@ -77,7 +77,7 @@ exports.createPost = (req, res, next) => {
     form.parse(req, (err, fields, files) => {
         if (err) {
             return res.status(400).json({
-                error: 'Image could not be uploaded'
+                error: 'Image could not be uploaded.'
             });
         }
         let post = new Post(fields);
@@ -93,7 +93,7 @@ exports.createPost = (req, res, next) => {
         post.save((err, result) => {
             if (err) {
                 return res.status(400).json({
-                    error: err
+                    error: 'Image too large.'
                 });
             }
             res.json(result);
