@@ -93,7 +93,7 @@ exports.createPost = (req, res, next) => {
         post.save((err, result) => {
             if (err) {
                 return res.status(400).json({
-                    error: 'Image too large.'
+                    error: 'Could not create post'
                 });
             }
             res.json(result);
