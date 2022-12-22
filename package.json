@@ -22,7 +22,7 @@
     "express-validator": "^5.3.1",
     "formidable": "^1.2.2",
     "google-auth-library": "^6.0.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.15",
     "mongoose": "^5.9.7",
     "morgan": "^1.10.0",
